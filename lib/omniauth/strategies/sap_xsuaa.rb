@@ -61,7 +61,7 @@ module OmniAuth
           email: jwt_payload['email'],
           first_name: first_name,
           last_name: last_name,
-          name: [first_name, last_name].join(", ")
+          name: [first_name, last_name].join(" ")
         )
       end
 
