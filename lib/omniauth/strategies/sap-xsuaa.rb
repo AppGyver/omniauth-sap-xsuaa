@@ -32,19 +32,23 @@ module OmniAuth
       option :name, 'xsuaa'
       option :client_id
       option :client_secret
-      option :provider_ignores_state, true
+      option :provider_ignores_state, false
+
+      option :uaa_domain, 'missing_option_uaa_domain'
+      option :jwt_aud, 'missing_option_jwd_aud'
+      option :token_url, 'missing_option_token_url'
 
       # XSUAA options
       # https://github.wdf.sap.corp/pages/CPSecurity/Knowledge-Base/03_ApplicationSecurity/Syntax%20and%20Semantics%20of%20xs-security.json/
       #
-      # issuer: https://subdomain.uaadomain/endpoint
-      # subdomain - token > ext_attr.zdn
+      # site: https://tenant.uaadomain/endpoint
+      # subdomain - tenant's subdomain (zdn), defined dynamically at OmniAuth's request phase
       # uaadomain - VCAP_SERVICES > xsuaa.credentials.uaadomain
       # endpoint  - /oauth/token
       option :client_options, {
-        site: 'http://sap-auth-playground.dockergyver.com:3000',
-        authorize_url: "https://appgyver-int.authentication.sap.hana.ondemand.com/oauth/authorize",
-        token_url: 'https://appgyver-int.authentication.sap.hana.ondemand.com/oauth/token'
+        site: 'site_provided_dynamically_at_request_phase',
+        authorize_url: '/oauth/authorize',
+        token_url: '/oauth/token'
       }
 
       uid { jwt_payload['sub'] }
@@ -84,11 +88,9 @@ module OmniAuth
         )
       end
 
-      # https://github.com/omniauth/omniauth/blob/master/lib/omniauth/strategy.rb#L496
+      # https://github.com/omniauth/omniauth/blob/a62d36b3f847e0e55b077790112e96950c35085a/lib/omniauth/strategy.rb#L496
       def callback_url
-        # TODO
-        # options[:redirect_uri] || (full_host + script_name + callback_path)
-        'http://sap-auth-playground.dockergyver.com:3000/auth/xsuaa/callback'
+        options[:redirect_uri] || (full_host + callback_path) # + query_string
       end
 
       private
@@ -106,10 +108,10 @@ module OmniAuth
       def jwt_options
         {
           verify_iss: true,
-          iss: 'https://appgyver-int.authentication.sap.hana.ondemand.com/oauth/token', # TODO
+          iss: options.token_url,
           verify_iat: true,
           verify_aud: true,
-          aud: ["openid", "sb-product-list!t30010"], # TODO
+          aud: options.jwt_aud,
           algorithms: ['RS256'],
           jwks: fetch_jwks()
         }
@@ -225,13 +227,10 @@ module OmniAuth
       def fetch_jwks
         jwks_uri = fetch_jwks_uri
 
-        http = Net::HTTP.new(jwks_uri.host, jwks_uri.port)
-        http.use_ssl = true
-        request = Net::HTTP::Get.new(jwks_uri.path, 'User-Agent' => 'omniauth/sap-xsuaa')
-        response = http.request(request)
+        response = Faraday.get(jwks_uri, request_headers)
 
-        unless response.is_a?(Net::HTTPSuccess)
-          raise FetchJwksError, "Failed to fetch #{request["host"]}#{request&.path}"
+        unless response.success?
+          raise FetchJwksError, "Failed to fetch #{jwks_uri}"
         end
 
         JSON.parse(response.body, symbolize_names: true)
@@ -242,18 +241,23 @@ module OmniAuth
       end
 
       # Authentication endpoint info (tenant specific)
+      #
       # https://TENANT.authentication.sap.hana.ondemand.com/.well-known/openid-configuration
       def fetch_openid_configuration
-        http = Net::HTTP.new('appgyver-int.authentication.sap.hana.ondemand.com', 443) # TODO
-        http.use_ssl = true
-        request = Net::HTTP::Get.new('/.well-known/openid-configuration', 'User-Agent' => 'omniauth/sap-xsuaa')
-        response = http.request(request)
+        url = "#{options.client_options.site}/.well-known/openid-configuration"
+        response = Faraday.get(url, request_headers)
 
-        unless response.is_a?(Net::HTTPSuccess)
-          raise FetchOpenIdConfigurationError, "Failed to fetch #{request["host"]}#{request.path}"
+        unless response.success?
+          raise FetchOpenIdConfigurationError, "Failed to fetch #{url}"
         end
 
         JSON.parse(response.body, symbolize_names: true)
+      end
+
+      def request_headers
+        {
+          'User-Agent' => 'omniauth/sap-xsuaa'
+        }
       end
 
       # Remove empty elements from a hash
