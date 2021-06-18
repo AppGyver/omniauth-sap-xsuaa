@@ -1,4 +1,4 @@
-# OmniAuth Authentication Stragegy for SAP XSUAA
+# OmniAuth Authentication Strategy for SAP XSUAA
 
 ## Usage
 
