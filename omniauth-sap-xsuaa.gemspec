@@ -1,5 +1,3 @@
-# lib = File.expand_path("../lib", __FILE__)
-# $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require_relative "lib/omniauth/sap-xsuaa/version"
 
 Gem::Specification.new do |s|
@@ -18,8 +16,10 @@ Gem::Specification.new do |s|
   end
   s.require_paths = ["lib"]
 
+  s.add_dependency 'omniauth', '~> 2.0'
   s.add_dependency 'omniauth-oauth2'
-  s.add_dependency 'omniauth-rails_csrf_protection'
   s.add_dependency 'jwt'
+  s.add_dependency "cf-app-utils", '~> 0.6' # Reads VCAP_SERVICES
+
   s.add_development_dependency "bundler", "~> 2.0"
 end
