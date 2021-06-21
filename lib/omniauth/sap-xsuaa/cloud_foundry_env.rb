@@ -6,6 +6,7 @@ require 'cf-app-utils'
 module CloudFoundryEnv
   module Xsuaa
     class MissingVcapServicesError < StandardError; end
+    class MissingTenantSubdomainError < StandardError; end
 
     def self.service_name
       ENV.fetch("XSUAA_SERVICE_NAME", "xsuaa")
@@ -47,6 +48,8 @@ module CloudFoundryEnv
     end
 
     def self.auth_site_url(tenant)
+      raise MissingTenantSubdomainError if tenant.nil?
+
       "https://#{tenant}.#{uaa_domain}"
     end
 
