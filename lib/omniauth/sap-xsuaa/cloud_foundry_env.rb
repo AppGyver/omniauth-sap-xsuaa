@@ -6,6 +6,7 @@ require 'cf-app-utils'
 module CloudFoundryEnv
   module Xsuaa
     class MissingVcapServicesError < StandardError; end
+    class MissingVcapServiceBindingError < StandardError; end
     class MissingTenantSubdomainError < StandardError; end
 
     def self.service_name
@@ -17,6 +18,12 @@ module CloudFoundryEnv
       raise MissingVcapServicesError, "Expected VCAP_SERVICES be present" if ENV['VCAP_SERVICES'].nil?
 
       @service ||= CF::App::Credentials.find_by_service_name(service_name)
+
+      if @service.nil?
+        raise MissingVcapServiceBindingError, "Missing VCAP_SERVICES binding for '#{service_name}'"
+      end
+
+      @service
     end
 
     def self.xsappname
