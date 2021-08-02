@@ -18,7 +18,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'omniauth', '~> 2.0'
   s.add_dependency 'omniauth-oauth2'
-  s.add_dependency 'cf-app-utils', '~> 0.6' # Reads VCAP_SERVICES
   s.add_dependency 'sap-jwt-utils'
 
   s.add_development_dependency "bundler", "~> 2.0"

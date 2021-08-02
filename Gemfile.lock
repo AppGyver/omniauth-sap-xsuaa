@@ -30,7 +30,6 @@ GEM
       tzinfo (~> 2.0)
       zeitwerk (~> 2.3)
     builder (3.2.4)
-    cf-app-utils (0.6)
     concurrent-ruby (1.1.9)
     crass (1.0.6)
     erubi (1.10.0)
@@ -96,7 +95,6 @@ PLATFORMS
   x86_64-darwin-20
 
 DEPENDENCIES
-  cf-app-utils (~> 0.6)
   omniauth (~> 2.0)
   omniauth-oauth2
   omniauth-rails_csrf_protection
