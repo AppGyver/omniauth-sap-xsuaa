@@ -110,7 +110,8 @@ module OmniAuth
         raise MissingAccessTokenError unless access_token&.token
         token = access_token.token
 
-        jwks = Sap::Jwt.fetch_jwks("#{options.client_options.site}/.well-known/openid-configuration")
+        oidc_config = Sap::Jwt.fetch_openid_configuration("#{options.client_options.site}/.well-known/openid-configuration")
+        jwks = Sap::Jwt.fetch_jwks(oidc_config[:jwks_uri])
 
         payload, _header = Sap::Jwt.verify!(
           token,
