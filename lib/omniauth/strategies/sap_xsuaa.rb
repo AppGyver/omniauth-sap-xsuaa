@@ -79,6 +79,7 @@ module OmniAuth
           zid: jwt_payload['zid'],
           origin: jwt_payload['origin'],
           ext_attr: jwt_payload['ext_attr'],
+          "xs.scopes": jwt_payload['scope'],
           "xs.system.attributes": jwt_payload['xs.system.attributes'],
           "xs.user.attributes": jwt_payload['xs.user.attributes']
         )
