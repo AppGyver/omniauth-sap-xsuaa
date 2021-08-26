@@ -31,9 +31,8 @@ module OmniAuth
       option :client_secret
       option :provider_ignores_state, false
 
-      option :uaa_domain, 'missing_option_uaa_domain'
       option :jwt_aud, 'missing_option_jwd_aud'
-      option :token_url, 'missing_option_token_url'
+      option :issuer, 'missing_option_issuer'
 
       # XSUAA options
       # https://github.wdf.sap.corp/pages/CPSecurity/Knowledge-Base/03_ApplicationSecurity/Syntax%20and%20Semantics%20of%20xs-security.json/
@@ -43,9 +42,9 @@ module OmniAuth
       # uaadomain - VCAP_SERVICES > xsuaa.credentials.uaadomain
       # endpoint  - /oauth/token
       option :client_options, {
-        site: 'site_provided_dynamically_at_request_phase',
-        authorize_url: '/oauth/authorize',
-        token_url: '/oauth/token'
+        site: 'value_provided_dynamically_at_request_phase',
+        token_url: 'value_provided_dynamically_at_request_phase',
+        authorize_url: '/oauth/authorize'
       }
 
       uid { jwt_payload['sub'] }
@@ -116,7 +115,7 @@ module OmniAuth
         payload, _header = Sap::Jwt.verify!(
           token,
           client_id: options.client_id,
-          iss: options.token_url,
+          iss: options.issuer,
           aud: options.jwt_aud,
           jwks: jwks,
           verify_iss: true,
