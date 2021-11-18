@@ -32,7 +32,7 @@ module OmniAuth
       option :provider_ignores_state, false
 
       option :jwt_aud, 'missing_option_jwd_aud'
-      option :issuer, 'missing_option_issuer'
+      option :issuer # Value is retrieved from OpenID Metadata if option.issuer is undefined
 
       # XSUAA options
       # https://github.wdf.sap.corp/pages/CPSecurity/Knowledge-Base/03_ApplicationSecurity/Syntax%20and%20Semantics%20of%20xs-security.json/
@@ -114,12 +114,18 @@ module OmniAuth
         oidc_config = Sap::Jwt.fetch_openid_configuration("#{options.client_options.site}/.well-known/openid-configuration")
         jwks = Sap::Jwt.fetch_jwks(oidc_config[:jwks_uri])
 
+        issuer = if options.issuer.nil?
+          oidc_config[:issuer]
+        else
+          options.issuer
+        end
+
         payload, _header = Sap::Jwt.verify!(
           token,
-          client_id: options.client_id,
-          iss: options.issuer,
-          aud: options.jwt_aud,
+          iss: issuer,
           jwks: jwks,
+          client_id: options.client_id,
+          aud: options.jwt_aud,
           verify_iss: true,
           verify_iat: true,
           verify_aud: true,
