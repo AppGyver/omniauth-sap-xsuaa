@@ -27,11 +27,10 @@ module OmniAuth
       include OmniAuth::Strategy
 
       option :name, 'xsuaa'
-      option :client_id
+      option :client_id, 'missing_client_id'
       option :client_secret
       option :provider_ignores_state, false
 
-      option :jwt_aud, 'missing_option_jwd_aud'
       option :issuer # Value is retrieved from OpenID Metadata if option.issuer is undefined
 
       # XSUAA options
@@ -125,10 +124,8 @@ module OmniAuth
           iss: issuer,
           jwks: jwks,
           client_id: options.client_id,
-          aud: options.jwt_aud,
           verify_iss: true,
           verify_iat: true,
-          verify_aud: true,
           algorithms: ['RS256'],
         )
 
