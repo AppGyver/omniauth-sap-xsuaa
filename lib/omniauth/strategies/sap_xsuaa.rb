@@ -26,6 +26,7 @@ module OmniAuth
     class SapXsuaa < OmniAuth::Strategies::OAuth2
       include OmniAuth::Strategy
 
+      option :redis # Inject Redis connection for JWK & OpenID Metadata cache
       option :name, 'xsuaa'
       option :client_id, 'missing_client_id'
       option :client_secret
@@ -108,8 +109,12 @@ module OmniAuth
         raise MissingAccessTokenError unless access_token&.token
         token = access_token.token
 
-        oidc_config = Sap::Jwt.fetch_openid_configuration("#{options.client_options.site}/.well-known/openid-configuration")
-        jwks = Sap::Jwt.fetch_jwks(oidc_config[:jwks_uri])
+        oidc_config = Sap::Jwt.fetch_openid_configuration(
+          redis: options.redis,
+          url: "#{options.client_options.site}/.well-known/openid-configuration"
+        )
+
+        jwks = Sap::Jwt.fetch_jwks(redis: options.redis, url: oidc_config[:jwks_uri])
 
         payload, _header = Sap::Jwt.verify!(
           token,
